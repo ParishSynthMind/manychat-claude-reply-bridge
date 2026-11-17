@@ -24,6 +24,7 @@ class Reply:
     texts: list[str] = field(default_factory=list)
     reason: str = ""
     add_tags: list[str] = field(default_factory=list)
+    low_priority_tags: list[str] = field(default_factory=list)  # first to drop when over 5 actions
     remove_tags: list[str] = field(default_factory=list)
     set_fields: dict = field(default_factory=dict)
     buttons: list[dict] = field(default_factory=list)
@@ -72,6 +73,7 @@ def ordered_actions(reply: Reply) -> list[dict]:
     out = [{"action": "add_tag", "tag_name": t} for t in reply.add_tags]
     out += [{"action": "set_field_value", "field_name": k, "value": v} for k, v in reply.set_fields.items()]
     out += [{"action": "remove_tag", "tag_name": t} for t in reply.remove_tags]
+    out += [{"action": "add_tag", "tag_name": t} for t in reply.low_priority_tags]
     return out
 
 
@@ -102,7 +104,7 @@ def external_json(reply: Reply) -> dict:
         "handover": reply.handover,
         "opted_out": reply.action == "opted_out",
         "sources": "; ".join(reply.sources),
-        "tags_added": ",".join(reply.add_tags),
+        "tags_added": ",".join(reply.add_tags + reply.low_priority_tags),
         "lead_qualified": all(reply.lead.get(k) for k in ("need", "budget", "timeline")),
     }
     for k in ("name", "need", "budget", "timeline"):

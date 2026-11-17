@@ -225,10 +225,10 @@ class Bridge:
         known = {k: m.custom_fields.get(f) for k, f in s.fields.items() if m.custom_fields.get(f)}
         new = {k: v for k, v in d.lead.items() if v and known.get(k) != v}
         lead = {**known, **new}
-        add_tags = [s.tags["answered"]]
+        add_tags = []
         if all(lead.get(k) for k in ("need", "budget", "timeline")) and s.tags["lead"] not in m.tags:
-            add_tags.insert(0, s.tags["lead"])
-        reply = Reply("answered", texts=texts, reason="", add_tags=add_tags,
+            add_tags.append(s.tags["lead"])
+        reply = Reply("answered", texts=texts, reason="", add_tags=add_tags, low_priority_tags=[s.tags["answered"]],
                       set_fields={s.fields[k]: v for k, v in new.items() if k in s.fields},
                       buttons=list(s.answer_buttons), quick_replies=list(s.quick_replies),
                       citations=d.citations, sources=titles, lead=lead, disclosed=disclosed)

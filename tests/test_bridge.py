@@ -55,7 +55,9 @@ def test_lead_fields_written_and_qualified_tag(bridge, claude):
     acts = actions(out)
     assert acts[0] == {"action": "add_tag", "tag_name": "lead-qualified"}
     assert {"action": "set_field_value", "field_name": "lead_budget", "value": "about 200 USD a month"} in acts
-    assert len(acts) == 5  # ManyChat's limit; the 6th action is overflow
+    assert {"action": "set_field_value", "field_name": "lead_timeline", "value": "by June"} in acts
+    assert len(acts) == 5  # ManyChat's limit: the low-priority ai-answered tag is the one left out
+    assert {"action": "add_tag", "tag_name": "ai-answered"} not in acts
 
 
 def test_lead_merges_fields_manychat_already_has(bridge, claude):
@@ -247,10 +249,9 @@ def test_overflow_actions_applied_via_api(kb, claude, mc, mc_api):
     claude.answer("Transform fits.", ["programs"], lead={"name": "Sara", "need": "a", "budget": "b", "timeline": "c"})
     b.respond(msg("which coaching programs do you have?"))
     b.pool.shutdown(wait=True)
-    # tags go first; the 6th action (a lead field) did not fit in ManyChat's 5 and went through the API
-    assert mc.api_calls == [("/fb/subscriber/setCustomFieldByName",
-                             {"subscriber_id": 5001, "field_name": "lead_timeline", "field_value": "c"})]
-    assert mc.contacts[5001].custom_fields["lead_timeline"] == "c"
+    # the low-priority ai-answered tag did not fit in ManyChat's 5 actions and went through the API
+    assert mc.api_calls == [("/fb/subscriber/addTagByName", {"subscriber_id": 5001, "tag_name": "ai-answered"})]
+    assert "ai-answered" in mc.contacts[5001].tags
 
 
 def test_same_message_twice_returns_cached_answer(bridge, claude):

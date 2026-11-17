@@ -125,3 +125,12 @@ def test_validator_catches_wrong_type_for_channel():
     out, _ = dynamic_block(answered(), "instagram")
     with pytest.raises(ValidationError):
         validate_v2(out, "telegram", TAGS, FIELDS)
+
+
+def test_low_priority_tag_dropped_first():
+    r = Reply("answered", texts=["x"], add_tags=["lead-qualified"], low_priority_tags=["ai-answered"],
+              set_fields={"lead_name": "a", "lead_need": "b", "lead_budget": "c", "lead_timeline": "d"})
+    out, overflow = dynamic_block(r, "instagram")
+    assert [a.get("field_name") for a in out["content"]["actions"][1:]] == ["lead_name", "lead_need", "lead_budget", "lead_timeline"]
+    assert overflow == [{"action": "add_tag", "tag_name": "ai-answered"}]
+    assert external_json(r)["tags_added"] == "lead-qualified,ai-answered"

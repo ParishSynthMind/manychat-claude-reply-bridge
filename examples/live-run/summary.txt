@@ -1,6 +1,6 @@
-Live run 2026-11-17 16:29 UTC (run 162923) against https://manychat-claude-reply-bridge.onrender.com
-model: claude-haiku-5-5, articles: 10, wake-up: 0.63 s
+Live run 2026-11-17 16:38 UTC (run 163801) against https://manychat-claude-reply-bridge.onrender.com
+model: claude-haiku-5-5, articles: 10, wake-up: 0.34 s
 steps: 13, ManyChat-valid replies: 13/13
-latency: fastest 0.13 s, slowest 4.91 s (ManyChat limit 10 s)
-replay identical and no new AI call: True (0.12 s)
+latency: fastest 0.13 s, slowest 2.48 s (ManyChat limit 10 s)
+replay identical and no new AI call: True (0.13 s)
 wrong secret: HTTP 401, ManyChat ran fallback
