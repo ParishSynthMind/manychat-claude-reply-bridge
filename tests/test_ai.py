@@ -99,6 +99,8 @@ def test_responder_sends_model_schema_and_timeout(kb):
     assert call["model"] == "claude-haiku-5-5" and call["timeout"] == 7.5
     assert call["output_config"]["format"]["schema"] is SCHEMA
     assert "instagram" in call["system"] and "temperature" not in call
+    assert call["thinking"] == {"type": "disabled"} and call["output_config"]["effort"] == "low"
+    assert call["max_tokens"] == 1500
     assert d.action == "answer" and d.input_tokens == 600
 
 

@@ -34,7 +34,8 @@ def build_bridge(settings: Settings, responder=None, manychat=None, store=None, 
     if responder is None:
         from .ai import ClaudeResponder
 
-        responder = ClaudeResponder(settings.model, settings.business_name, api_key=settings.anthropic_api_key)
+        responder = ClaudeResponder(settings.model, settings.business_name, api_key=settings.anthropic_api_key,
+                                    effort=settings.effort)
     if manychat is None and settings.manychat_api_key:
         from .manychat_api import ManyChatClient
 

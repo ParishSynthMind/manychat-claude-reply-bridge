@@ -30,6 +30,7 @@ DEFAULT_MESSAGES = {
 class Settings:
     business_name: str = "Demo Business"
     model: str = "claude-haiku-5-5"
+    effort: str = "low"
     kill_switch: bool = False
     default_channel: str = "instagram"
     min_confidence: float = 0.7
@@ -77,6 +78,8 @@ class Settings:
             raise ValueError(f"default_channel must be one of {CHANNELS}")
         if not 0 < self.deadline_seconds <= 9.0:
             raise ValueError("deadline_seconds must be above 0 and at most 9 (ManyChat stops waiting at 10 s)")
+        if self.effort not in ("low", "medium", "high"):
+            raise ValueError("effort must be low, medium or high (thinking is off, which the API allows up to high)")
         if not 0 <= self.min_confidence <= 1:
             raise ValueError("min_confidence must be between 0 and 1")
         if len(self.answer_buttons) > 3:

@@ -119,7 +119,8 @@ def check_decision(raw: dict, articles: list[Article], min_confidence: float) ->
 class ClaudeResponder:
     """Reads ANTHROPIC_API_KEY from the environment unless api_key is given. Pass client= in tests."""
 
-    def __init__(self, model: str, business: str, client=None, api_key: str | None = None, max_tokens: int = 500):
+    def __init__(self, model: str, business: str, client=None, api_key: str | None = None, max_tokens: int = 1500,
+                 effort: str = "low"):
         if client is None:
             import anthropic  # lazy, so tests run without the SDK configured
 
@@ -129,6 +130,7 @@ class ClaudeResponder:
         self.model = model
         self.business = business
         self.max_tokens = max_tokens
+        self.effort = effort
 
     def decide(self, history: list[dict], latest: str, articles: list[Article], channel: str,
                min_confidence: float, timeout: float = 9.0) -> Decision:
@@ -138,7 +140,11 @@ class ClaudeResponder:
             max_tokens=self.max_tokens,
             system=system,
             messages=[{"role": "user", "content": build_user_prompt(history, latest, articles)}],
-            output_config={"format": {"type": "json_schema", "schema": SCHEMA}},
+            # Latency matters more than depth here (ManyChat's 10 s limit): thinking off, low effort.
+            # Measured live 17 Nov 2026 on claude-haiku-5-5: default adaptive thinking used ~1,000 output
+            # tokens and 7 s for one lead message; thinking off + low effort: ~200 tokens, 2-3.5 s.
+            thinking={"type": "disabled"},
+            output_config={"effort": self.effort, "format": {"type": "json_schema", "schema": SCHEMA}},
             timeout=timeout,
         )
         if response.stop_reason == "refusal":

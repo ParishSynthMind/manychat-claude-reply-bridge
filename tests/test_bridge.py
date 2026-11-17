@@ -364,3 +364,18 @@ def test_telegram_reply_has_no_quick_replies(kb, claude):
     claude.answer("Starter is 99 USD.", ["pricing"])
     assert b.respond(msg("price?", channel="telegram"))["content"]["quick_replies"] == []
     assert b.respond(msg("price?", cid="7", channel="instagram"))["content"]["quick_replies"][0]["target"] == "content1"
+
+
+def test_model_handover_still_writes_lead_fields(bridge, claude):
+    claude.handover("wants a custom plan", lead={"name": "Sara", "budget": "200 USD"})
+    out = bridge.respond(msg("I'm Sara, 200 USD budget, can you build me something custom?"))
+    acts = actions(out)
+    assert acts[0] == {"action": "add_tag", "tag_name": "human-handover"}
+    assert {"action": "set_field_value", "field_name": "lead_name", "value": "Sara"} in acts
+    assert {"action": "set_field_value", "field_name": "lead_budget", "value": "200 USD"} in acts
+
+
+def test_effort_setting_validated():
+    import pytest
+    with pytest.raises(ValueError):
+        make_settings(effort="max")

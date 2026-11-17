@@ -2,6 +2,7 @@
 # Anthropic key and the optional ManyChat API key come from the environment.
 business_name: Peak Form Coaching
 model: claude-haiku-5-5         # one line to change the model (playbook rule B10)
+effort: low                     # low | medium | high; thinking is switched off to stay well inside 10 s
 kill_switch: false              # true = no AI calls; every message gets the handover reply
 default_channel: instagram      # instagram | messenger | whatsapp | telegram (when the request does not say)
 min_confidence: 0.7

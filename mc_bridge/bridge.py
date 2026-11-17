@@ -27,6 +27,10 @@ FALSE = {"false", "0", "no", "n"}
 SAFETY_MARGIN = 0.4  # seconds kept back for formatting and the network
 
 
+def s_fields(settings) -> list[str]:
+    return list(settings.fields.values())
+
+
 def reason_label(reason: str) -> str:
     """A reason safe for logs and alerts: the model's own words are never passed on."""
     return "model" if reason.startswith("model:") else reason[:60]
@@ -203,6 +207,12 @@ class Bridge:
     def _from_decision(self, m: Inbound, contact: dict, text: str, d: Decision, record: bool = True) -> Reply:
         if d.action != "answer":
             reply = self._handover(m, contact, "model: " + (d.reason or "asked for a person"))
+            # what the customer told us is still worth keeping for the person who takes over
+            known = {f: m.custom_fields.get(f) for f in s_fields(self.s)}
+            for k, v in d.lead.items():
+                f = self.s.fields.get(k)
+                if f and v and known.get(f) != v:
+                    reply.set_fields[f] = v
             reply.lead = d.lead
             return reply
         s = self.s
