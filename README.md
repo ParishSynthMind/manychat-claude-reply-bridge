@@ -12,7 +12,11 @@ A small, secure HTTPS endpoint that lets a **ManyChat** flow (Instagram DM, Face
 - refuses **prompt injection** (customer text is data, never instructions),
 - returns the same answer for a repeated request (**idempotency**), so a retry or a replayed request never costs a second AI call.
 
-**Status, 17 November 2026:** built and tested offline against a faithful copy of ManyChat's documented behaviour (209 tests, CI green), and **deployed live on Render** with real Claude Haiku 5.5 calls, exercised over the internet with exactly the requests ManyChat sends. **ManyChat itself has NOT called this endpoint yet**: Dynamic Block and External Request are only available on ManyChat's paid plans, and the test account is on the free plan. Details: [What was proven live, and what was not](#what-was-proven-live-and-what-was-not).
+**Status, 17 November 2026:** built and tested offline against a faithful copy of ManyChat's documented behaviour (212 tests, CI green), and **deployed live on Render** with real Claude Haiku 5.5 calls, exercised over the internet with exactly the requests ManyChat sends. **ManyChat itself has NOT called this endpoint yet**: Dynamic Block and External Request are only available on ManyChat's paid plans, and the test account is on the free plan. Details: [What was proven live, and what was not](#what-was-proven-live-and-what-was-not).
+
+![Live run, 17 Nov 2026: real replies from the deployed bridge and real Claude, drawn as an Instagram DM thread](media/live-run-dm.png)
+
+*Real replies from the live run on 17 Nov 2026 (deployed bridge, real Claude Haiku 5.5), drawn as a DM thread from [`examples/live-run/run.jsonl`](examples/live-run/run.jsonl). It is a drawing, not a ManyChat or Instagram screenshot: ManyChat itself has not called the bridge (see below).*
 
 ## How it works
 
@@ -41,7 +45,7 @@ quick replies where the channel supports them   -- or flat JSON for External Req
 
 ManyChat's rules are enforced in the reply, so it is never rejected for shape or size: at most **10 messages, 5 actions and 11 quick replies**, quick replies only on Instagram and Messenger (ManyChat does not support them on WhatsApp or Telegram), no `content.type` for Messenger, long answers split under each channel's text limit, and actions ordered so the important ones (handover, opt-out, lead tag) fit in the 5. Anything that does not fit can be applied through ManyChat's Public API (below).
 
-**Example reply (real, from the live run):** see [`examples/live-run/run.jsonl`](examples/live-run/run.jsonl).
+![How a DM gets its answer](media/flow-diagram.png)
 
 ### The slow path (optional, paid ManyChat plans)
 If Claude is slower than the deadline, the customer gets a short holding message and the flow continues. With `MANYCHAT_API_KEY` set, the holding message is "Give me a few seconds, I'm checking that for you." and the real answer is sent a moment later through ManyChat's Public API (`/fb/sending/sendContent`, plus `addTagByName` / `setCustomFieldByName` for the actions). This path is tested offline only.
@@ -59,6 +63,12 @@ If Claude is slower than the deadline, the customer gets a short holding message
 | Slow path and extra actions through ManyChat's Public API | **Mocked only** (faithful fake of the Page API from ManyChat's Swagger: Bearer key, 3011 error outside 24 h) |
 | HMAC-signed mode (for n8n, Make or a Cloudflare Worker in front) | **Tested offline** |
 
+**The live run (17 Nov 2026, 16:40 UTC, final code):** 13 scripted messages from 6 made-up contacts across Instagram, Telegram, WhatsApp and Messenger formats, plus a replay and a wrong-secret call, sent over the internet to `https://manychat-claude-reply-bridge.onrender.com` (`scripts/live_run.py`). Result ([`summary.txt`](examples/live-run/summary.txt)): 13/13 replies valid by ManyChat's rules; slowest reply 3.57 s (limit 10 s); the lead message wrote all four lead fields and the `lead-qualified` tag in one go; the refund, the prompt-injection attempt and an off-topic question went to a person; STOP/START worked; the replayed request returned the identical answer in 0.37 s with no AI call; a wrong secret got 401 and ManyChat's fallback.
+
+![What the bridge wrote back to ManyChat in the live run](media/live-run-actions.png)
+
+**What the first live run caught:** Claude Haiku 5.5 thinks by default, and on the lead message it spent about 1,000 output tokens and 7 seconds, hit the output cap and was handed to a person, losing the lead. The fix (switch thinking off, `effort: low`, a larger output cap) brought replies to 2 to 3.5 seconds; the run above is after the fix.
+
 Everything about ManyChat's behaviour that the stand-in copies comes from ManyChat's own documentation, read on 17 November 2026: Help Center articles *Dev Tools: Basics*, *Dev Tools: Dynamic block*, *Dev Tools: External request*, *Response Reference for Instagram, WhatsApp, and Telegram Automation*, the Dynamic Block reference on manychat.github.io, and the Page API Swagger at api.manychat.com/swagger.
 
 ## Run it
@@ -66,7 +76,7 @@ Everything about ManyChat's behaviour that the stand-in copies comes from ManyCh
 ```bash
 python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.lock -r requirements-dev.txt && pip install -e . --no-deps
-pytest -q                       # 209 tests, all offline: ManyChat and Claude are faked
+pytest -q                       # 212 tests, all offline: ManyChat and Claude are faked
 cp .env.example .env            # fill in BRIDGE_SECRETS and ANTHROPIC_API_KEY
 mc-bridge new-secret            # makes a value for BRIDGE_SECRETS
 mc-bridge ask "How much is the Transform program?"   # one question through the real Claude
@@ -108,7 +118,7 @@ Step by step, with both flow versions (Dynamic Block and External Request) and t
 | Part | Version | Notes |
 |---|---|---|
 | Anthropic Python SDK | 2.9.0 (`anthropic>=2.9,<3`) | sends API version 2026-10-21; no `temperature`/`top_p` sent |
-| Claude model | `claude-haiku-5-5` | one setting in `config/bridge.yaml` |
+| Claude model | `claude-haiku-5-5`, thinking off, `effort: low` | one setting each in `config/bridge.yaml` |
 | ManyChat Dynamic Block format | `v2` | "Dynamic Block API's current version is v2" (Help Center, 29 Oct 2026) |
 | ManyChat Public API | Page API (`/fb/...`), Bearer key | slow path only |
 | Python | 3.12 | CI on ubuntu-24.04; actions pinned by commit |
@@ -144,6 +154,7 @@ mc_bridge/store.py         SQLite: flags, short history, idempotency, nonces, co
 mc_bridge/manychat_api.py  Public API client (slow path)
 mc_bridge/fake_manychat.py ManyChat stand-in used by the tests and the live run
 scripts/live_run.py        the live run against a deployed bridge
+scripts/make_media.py      draws the README images from the live-run record
 docs/MANYCHAT-SETUP.md     building the flow in ManyChat
 ```
 

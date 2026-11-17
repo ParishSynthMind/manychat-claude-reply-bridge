@@ -1,6 +1,6 @@
 # Portfolio listing: ManyChat AI Reply Bridge
 
-**Status: DRAFT, not posted yet.**
+**Status: ready to post (Parish pre-approved posting on 17 Nov once the live test passed).**
 
 Repo: https://github.com/ParishSynthMind/manychat-claude-reply-bridge
 Thumbnail (4:3): `media/thumbnail-4x3.png`. Extra images: `media/live-run-dm.png`, `media/live-run-actions.png`, `media/flow-diagram.png`.
@@ -13,7 +13,7 @@ Thumbnail (4:3): `media/thumbnail-4x3.png`. Extra images: `media/live-run-dm.png
 **Description:**
 A secure endpoint that lets a ManyChat flow (Instagram DM, Messenger, WhatsApp, Telegram) get its reply from Claude. ManyChat calls it from a Dynamic Block or External Request; it answers only from the business's knowledge base with the source shown, writes the lead's name, goal, budget and timeline into ManyChat custom fields, and tags qualified leads. Refunds, complaints, legal, payment or personal-data messages go to a person: tagged, the bot paused, the team alerted. It says it is an AI, honours STOP/START, refuses prompt injection, never charges a second AI call for a repeated request, and replies inside ManyChat's 10-second limit with a fallback.
 
-Proven live on 17 Nov 2026: deployed on Render with real Claude calls, tested over the internet with the exact requests ManyChat sends, every reply checked against ManyChat's format rules. Not yet called by ManyChat itself (that needs a paid ManyChat plan). 211 automated tests, CI green.
+Proven live on 17 Nov 2026: deployed on Render with real Claude calls, tested over the internet with the exact requests ManyChat sends, every reply checked against ManyChat's format rules. Not yet called by ManyChat itself (that needs a paid ManyChat plan). 212 automated tests, CI green.
 
 How I work: written scope, agreed acceptance tests, a 30-day bug-fix window (broken, not different), changes quoted separately, and a care plan available. You own every account and key.
 
