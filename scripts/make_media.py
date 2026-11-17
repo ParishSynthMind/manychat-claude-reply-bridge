@@ -38,7 +38,7 @@ def bubbles(steps, size=15):
     out = []
     for r in steps:
         out.append(f'<div class="me">{esc(r["customer"])}</div>')
-        for i, d in enumerate(r["delivered"]):
+        for d in r["delivered"]:
             out.append(f'<div class="bot">{esc(d)}</div>')
         msgs = (r.get("response") or {}).get("content", {}).get("messages", [])
         if msgs and msgs[-1].get("buttons"):
