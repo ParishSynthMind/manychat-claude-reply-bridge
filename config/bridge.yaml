@@ -1,0 +1,63 @@
+# ManyChat AI Reply Bridge settings. No secrets here: the shared secret(s), the
+# Anthropic key and the optional ManyChat API key come from the environment.
+business_name: Peak Form Coaching
+model: claude-haiku-5-5         # one line to change the model (playbook rule B10)
+kill_switch: false              # true = no AI calls; every message gets the handover reply
+default_channel: instagram      # instagram | messenger | whatsapp | telegram (when the request does not say)
+min_confidence: 0.7
+deadline_seconds: 8.0           # ManyChat gives up after 10 s (fixed); we answer or fall back before 8 s
+history_turns: 6                # earlier turns kept per contact (ManyChat does not send history)
+history_ttl_hours: 24
+show_sources: true              # adds "Source: <article title>" under AI answers
+max_input_chars: 1000
+
+# Spend and abuse limits, on top of the Anthropic workspace spend cap.
+max_ai_calls_per_day: 300
+per_contact_per_minute: 5
+per_contact_per_day: 40
+per_ip_per_minute: 120
+
+# Security
+require_signature: false        # true = only accept HMAC-signed requests (via n8n/Make/Cloudflare in front)
+signature_window_seconds: 300
+max_interaction_age_seconds: 0  # >0 rejects requests whose ManyChat last_interaction is older (turn on after checking your account)
+idempotency_ttl_seconds: 600
+
+# What the bridge writes back into ManyChat (tags must already exist in ManyChat).
+tags:
+  answered: ai-answered
+  handover: human-handover
+  opted_out: opted-out
+  lead: lead-qualified
+  timeout: ai-timeout
+fields:                         # ManyChat custom user fields (text) the lead details go into
+  name: lead_name
+  need: lead_need
+  budget: lead_budget
+  timeline: lead_timeline
+paused_field: ai_paused         # True/False field: true = a person has the chat, the bridge stays quiet
+
+answer_buttons:                 # url buttons added under answers (work on all four channels)
+  - caption: Book a free call
+    url: https://example.com/book
+quick_replies: []               # e.g. [{type: flow, caption: "See plans", target: "content2026..."}]; Instagram/Messenger only
+
+messages:
+  handover: "I'm the AI assistant, so I've passed this to the team and a person will reply here shortly."
+  checking: "Give me a few seconds, I'm checking that for you."   # sent when the slow path will finish the answer
+  fallback: "Thanks for your message! Our team will get back to you here shortly."
+  opt_out: "You're unsubscribed and won't get automated replies. Send START any time to switch them back on."
+  opt_in: "Welcome back! Automated replies are on again. How can I help?"
+  rate_limited: "You're sending messages quickly. Give me a moment and try again shortly."
+
+risk_words:
+  refund: [refund, money back, chargeback, cancel my subscription]
+  legal: [lawyer, legal, lawsuit, sue, court, solicitor]
+  complaint: [complaint, complain, scam, terrible service, disgusted]
+  payment: [payment failed, card declined, charged twice, double charged, billing problem, invoice wrong]
+  personal_data: [delete my data, gdpr, my data, personal data, data request]
+human_words: [human, real person, agent, talk to someone, speak to someone, call me]
+opt_out_words: [stop, unsubscribe, opt out, stop messages, no more messages]
+
+knowledge_base_dir: knowledge_base
+db_path: data/bridge.db

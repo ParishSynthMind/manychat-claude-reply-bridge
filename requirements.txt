@@ -1,0 +1,6 @@
+# Pinned top-level packages (playbook rule B15); the full locked set is requirements.lock. anthropic 2.x sends API version 2026-10-21 (rule B17).
+anthropic==2.9.0
+fastapi==0.163.1
+httpx==0.28.1
+PyYAML==6.0.3
+uvicorn==0.54.0

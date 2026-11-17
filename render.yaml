@@ -1,0 +1,29 @@
+# Render Blueprint (free plan). Render asks for every "sync: false" value when it creates the
+# service and stores it as an encrypted environment variable. Nothing secret lives in this file.
+# Free plan: sleeps after 15 idle minutes (the first request then takes up to a minute, which is
+# longer than ManyChat's 10-second limit, so ManyChat would run your Fallback step), and has no
+# persistent disk (opt-out/pause/disclosure flags reset on restart). For a client: plan starter + a disk.
+services:
+  - type: web
+    name: manychat-claude-reply-bridge
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.lock && pip install -e . --no-deps
+    startCommand: uvicorn mc_bridge.server:app_from_env --factory --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: BRIDGE_SECRETS
+        sync: false        # long random value(s); ManyChat sends one in the X-Bridge-Secret header
+      - key: ANTHROPIC_API_KEY
+        sync: false        # the client's own key, in a workspace with a monthly spend limit
+      - key: MANYCHAT_API_KEY
+        sync: false        # optional (paid ManyChat plans): slow path + extra actions
+      - key: ALERT_WEBHOOK_URL
+        sync: false
+      - key: HEARTBEAT_URL
+        sync: false
+      - key: TRUST_PROXY_HEADERS
+        value: "true"
